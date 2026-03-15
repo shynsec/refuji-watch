@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Refuji Watch</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #2a2a2a;
+      --accent: #2dd4bf; --accent2: #c0392b; --blue: #5b8dd9;
+      --text: #f0ede6; --muted: #888;
+      --serif: 'Playfair Display', Georgia, serif;
+      --mono: 'DM Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--mono); font-size: 13px;
+      line-height: 1.6; min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 2rem 3rem;
+      display: flex; align-items: flex-end;
+      justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      animation: fadeDown 0.6s ease both;
+    }
+    .masthead h1 {
+      font-family: var(--serif); font-size: clamp(2rem, 5vw, 3.8rem);
+      font-weight: 900; letter-spacing: -0.02em; line-height: 1;
+    }
+    .masthead h1 span { color: var(--accent); }
+    .masthead p {
+      margin-top: 0.4rem; color: var(--muted);
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .live-badge {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent2); animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(1.4); }
+    }
+
+    .ticker {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface); overflow: hidden;
+      padding: 0.55rem 0; white-space: nowrap;
+    }
+    .ticker-inner {
+      display: inline-block; animation: scroll 36s linear infinite;
+      color: var(--accent); font-size: 11px; letter-spacing: 0.08em;
+    }
+    @keyframes scroll {
+      0%   { transform: translateX(100vw); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* SEARCH */
+    .search-bar {
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      padding: 0.8rem 3rem;
+      position: relative;
+    }
+    .search-wrap {
+      position: relative;
+      max-width: 420px;
+    }
+    .search-icon {
+      position: absolute; left: 0.8rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted); font-size: 12px; pointer-events: none;
+    }
+    #country-search {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 0.5rem 0.8rem 0.5rem 2rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #country-search::placeholder { color: var(--muted); }
+    #country-search:focus { border-color: var(--accent); }
+    .search-results {
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+    }
+    .search-results.open { display: block; }
+    .search-result-item {
+      padding: 0.5rem 0.8rem;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: var(--border); }
+    .search-result-item:hover .result-arrow { opacity: 1; }
+    .result-name { color: var(--text); }
+    .result-stat { color: var(--muted); font-size: 11px; }
+    .result-arrow { color: var(--accent); opacity: 0; font-size: 10px; transition: opacity 0.15s; }
+    .search-no-results {
+      padding: 0.8rem; font-size: 12px;
+      color: var(--muted); text-align: center;
+    }
+
+    /* DOWNLOAD BUTTON */
+    .download-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); font-family: var(--mono);
+      font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 0.35rem 0.8rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .download-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .download-btn svg { width: 11px; height: 11px; }
+
+    main { padding: 2.5rem 3rem; display: grid; gap: 1.5rem; }
+    .full-width { grid-column: 1 / -1; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+    @media (max-width: 700px) {
+      .two-col { grid-template-columns: 1fr; }
+      main, header { padding: 1.5rem; }
+    }
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1px; border: 1px solid var(--border); background: var(--border);
+    }
+    .stat-card {
+      background: var(--surface); padding: 1.8rem 1.5rem;
+      animation: fadeUp 0.5s ease both;
+    }
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+    .stat-label {
+      font-size: 10px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem;
+    }
+    .stat-number {
+      font-family: var(--serif); font-size: clamp(1.8rem, 3vw, 2.8rem);
+      font-weight: 700; color: var(--accent); line-height: 1;
+    }
+    .stat-sub { margin-top: 0.3rem; font-size: 11px; color: var(--muted); }
+
+    .panel {
+      border: 1px solid var(--border); background: var(--surface);
+      animation: fadeUp 0.5s ease both; animation-delay: 0.5s;
+    }
+    .panel-header {
+      padding: 1rem 1.4rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title {
+      font-size: 10px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .panel-body { padding: 1.2rem 1.4rem; }
+
+    .bar-list { display: flex; flex-direction: column; gap: 0.9rem; }
+    .bar-meta {
+      display: flex; justify-content: space-between;
+      margin-bottom: 0.3rem; font-size: 12px;
+    }
+
+    /* Clickable country links */
+    .bar-country {
+      color: var(--text); cursor: pointer;
+      text-decoration: none; transition: color 0.15s;
+    }
+    .bar-country:hover { color: var(--accent); }
+    .bar-country::after {
+      content: ' →'; font-size: 10px;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    .bar-country:hover::after { opacity: 1; }
+
+    .bar-value   { color: var(--accent); font-weight: 500; }
+    .bar-track {
+      height: 4px; background: var(--border);
+      border-radius: 2px; overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; background: var(--accent);
+      border-radius: 2px; width: 0;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .bar-fill.host { background: var(--blue); }
+
+    .chart-wrap { position: relative; height: 180px; margin-top: 0.5rem; }
+    svg.trend { width: 100%; height: 100%; overflow: visible; }
+    .trend-line {
+      fill: none; stroke: var(--accent); stroke-width: 2;
+      stroke-dasharray: 1000; stroke-dashoffset: 1000;
+      animation: drawLine 1.5s ease 0.8s forwards;
+    }
+    .trend-area { fill: url(#areaGrad); opacity: 0; animation: fadeIn 0.5s ease 2s forwards; }
+    .axis-label { fill: var(--muted); font-family: var(--mono); font-size: 10px; }
+
+    /* FUNDING */
+    .funding-list { display: flex; flex-direction: column; gap: 1.2rem; }
+    .funding-meta {
+      display: flex; justify-content: space-between;
+      align-items: baseline; margin-bottom: 0.4rem; gap: 1rem;
+    }
+    .funding-name {
+      font-size: 12px; color: var(--text);
+      white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; max-width: 55%;
+      cursor: pointer; transition: color 0.15s; text-decoration: none;
+    }
+    .funding-name:hover { color: var(--accent); }
+    .funding-numbers { display: flex; gap: 1rem; font-size: 11px; flex-shrink: 0; }
+    .funded-val { color: var(--accent); }
+    .gap-val    { color: var(--accent2); }
+    .pct-badge {
+      font-size: 10px; padding: 1px 6px;
+      border-radius: 2px; font-weight: 500;
+    }
+    .pct-low  { background: rgba(192,57,43,0.2);   color: var(--accent2); }
+    .pct-mid  { background: rgba(232,196,122,0.15); color: var(--accent); }
+    .pct-high { background: rgba(91,141,217,0.2);   color: var(--blue); }
+    .funding-track {
+      height: 8px; background: rgba(192,57,43,0.25);
+      border-radius: 2px; overflow: hidden;
+    }
+    .funding-fill {
+      height: 100%; background: var(--accent); border-radius: 2px;
+      width: 0; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .funding-hint { font-size: 10px; color: var(--muted); letter-spacing: 0.06em; }
+
+    /* MAP */
+    #map { height: 420px; width: 100%; background: #0d0d0d; }
+    .leaflet-popup-content-wrapper {
+      background: #1a1a1a; border: 1px solid var(--border);
+      border-radius: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      color: var(--text); font-family: var(--mono); font-size: 12px;
+    }
+    .leaflet-popup-tip { background: #1a1a1a; }
+    .popup-country {
+      font-family: var(--serif); font-size: 1rem;
+      font-weight: 700; color: var(--accent); margin-bottom: 0.4rem;
+    }
+    .popup-row {
+      display: flex; justify-content: space-between;
+      gap: 1.5rem; margin-top: 0.2rem; font-size: 11px;
+    }
+    .popup-label { color: var(--muted); }
+    .popup-val   { color: var(--text); font-weight: 500; }
+    .popup-link {
+      display: block; margin-top: 0.6rem;
+      font-size: 10px; color: var(--accent);
+      text-decoration: none; letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .popup-link:hover { text-decoration: underline; }
+    .map-hint { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; }
+
+    footer {
+      border-top: 1px solid var(--border); padding: 1.2rem 3rem;
+      display: flex; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.5rem;
+      font-size: 10px; color: var(--muted); letter-spacing: 0.08em;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @keyframes drawLine { to { stroke-dashoffset: 0; } }
+    @keyframes fadeIn   { to { opacity: 1; } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="masthead">
+    <h1>Refuji <span>Watch</span></h1>
+    <p>Global Displacement Dashboard · Data: UNHCR &amp; OCHA FTS</p>
+  </div>
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    <span id="updated-label">Loading...</span>
+  </div>
+</header>
+
+<div class="ticker">
+  <div class="ticker-inner" id="ticker-text">Loading displacement data...</div>
+</div>
+
+<div class="search-bar">
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input
+      type="text"
+      id="country-search"
+      placeholder="Search any country..."
+      autocomplete="off"
+    />
+    <div class="search-results" id="search-results"></div>
+  </div>
+</div>
+
+<main>
+  <div class="stats-row full-width">
+    <div class="stat-card">
+      <div class="stat-label">Total Displaced</div>
+      <div class="stat-number" id="stat-total">—</div>
+      <div class="stat-sub">people worldwide</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Refugees</div>
+      <div class="stat-number" id="stat-refugees">—</div>
+      <div class="stat-sub">fled across borders</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Asylum Seekers</div>
+      <div class="stat-number" id="stat-asylum">—</div>
+      <div class="stat-sub">awaiting decisions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Internally Displaced</div>
+      <div class="stat-number" id="stat-idp">—</div>
+      <div class="stat-sub">within own country</div>
+    </div>
+  </div>
+
+  <div class="panel full-width">
+    <div class="panel-header">
+      <span class="panel-title">Global Displacement Trend (millions)</span>
+      <button class="download-btn" onclick="downloadDashboardCSV()">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 1v7M3 5l3 3 3-3M1 10h10"/>
+        </svg>
+        Download CSV
+      </button>
+    </div>
+    <div class="panel-body">
+      <div class="chart-wrap">
+        <svg class="trend" id="trend-svg" viewBox="0 0 800 160" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#2dd4bf" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel full-width">
+    <div class="panel-header">
+      <span class="panel-title">Origin Countries — click a marker or name to explore</span>
+      <span class="map-hint">Top 5 origin countries shown</span>
+    </div>
+    <div class="panel-body" style="padding: 0;">
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Top Origin Countries</span>
+      </div>
+      <div class="panel-body">
+        <div class="bar-list" id="origins-list"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Top Host Countries</span>
+      </div>
+      <div class="panel-body">
+        <div class="bar-list" id="hosts-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel full-width">
+    <div class="panel-header">
+      <span class="panel-title">Humanitarian Funding Gaps — largest underfunded appeals</span>
+      <span class="funding-hint">Source: OCHA Financial Tracking Service</span>
+    </div>
+    <div class="panel-body">
+      <div class="funding-list" id="funding-list"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>
+    Sources:
+    <a href="https://www.unhcr.org/refugee-statistics" target="_blank">UNHCR Refugee Data Finder</a> ·
+    <a href="https://fts.unocha.org" target="_blank">OCHA Financial Tracking Service</a>
+  </span>
+  <span id="footer-date">—</span>
+  <span>
+    Built by <a href="https://github.com/shynsec" target="_blank">shynsec</a> ·
+    <a href="https://github.com/shynsec/refuji-watch" target="_blank">View on GitHub</a>
+  </span>
+</footer>
+
+<script>
+  function fmt(n) {
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+    return n;
+  }
+
+  function fmtUSD(n) {
+    if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return '$' + (n / 1e6).toFixed(0) + 'M';
+    return '$' + n.toLocaleString();
+  }
+
+  function countryURL(name) {
+    return `country.html?country=${encodeURIComponent(name)}`;
+  }
+
+  const COORDS = {
+    "Afghanistan":              [33.9,  67.7],
+    "Syria":                    [34.8,  38.9],
+    "DR Congo":                 [-4.0,  21.7],
+    "Central African Republic": [6.6,   20.9],
+    "South Sudan":              [6.9,   31.3],
+    "Somalia":                  [5.1,   46.2],
+    "Myanmar":                  [17.1,  96.8],
+    "Sudan":                    [12.9,  30.2],
+    "Ukraine":                  [48.4,  31.2],
+    "Iraq":                     [33.2,  43.7],
+    "Eritrea":                  [15.2,  39.8],
+    "Nigeria":                  [9.1,    8.7],
+    "Ethiopia":                 [9.1,   40.5],
+    "Venezuela":                [6.4,  -66.6],
+    "Colombia":                 [4.6,  -74.1],
+  };
+
+  function renderBars(listId, items, key, cssClass) {
+    const max = Math.max(...items.map(i => i[key]));
+    const el  = document.getElementById(listId);
+    el.innerHTML = items.map(item => `
+      <div>
+        <div class="bar-meta">
+          <a class="bar-country" href="${countryURL(item.country)}">${item.country}</a>
+          <span class="bar-value">${fmt(item[key])}</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ${cssClass || ''}" data-pct="${(item[key] / max * 100).toFixed(1)}"></div>
+        </div>
+      </div>
+    `).join('');
+    requestAnimationFrame(() => {
+      el.querySelectorAll('.bar-fill').forEach(b => b.style.width = b.dataset.pct + '%');
+    });
+  }
+
+  function renderTrend(data) {
+    const svg  = document.getElementById('trend-svg');
+    const W = 800, H = 140, PAD = { top: 10, right: 20, bottom: 30, left: 10 };
+    const xs   = data.map((_, i) => PAD.left + i * (W - PAD.left - PAD.right) / (data.length - 1));
+    const vals = data.map(d => d.total / 1e6);
+    const minV = Math.min(...vals), maxV = Math.max(...vals);
+    const y    = v => PAD.top + (1 - (v - minV) / (maxV - minV)) * (H - PAD.top - PAD.bottom);
+    const pts  = data.map((d, i) => `${xs[i]},${y(vals[i])}`).join(' ');
+    const area = `M${xs[0]},${y(vals[0])} ` +
+      data.slice(1).map((d, i) => `L${xs[i+1]},${y(vals[i+1])}`).join(' ') +
+      ` L${xs[xs.length-1]},${H - PAD.bottom} L${xs[0]},${H - PAD.bottom} Z`;
+    svg.innerHTML += `
+      <path class="trend-area" d="${area}"/>
+      <polyline class="trend-line" points="${pts}"/>
+      ${data.map((d, i) => `
+        <text class="axis-label" x="${xs[i]}" y="${H - PAD.bottom + 16}" text-anchor="middle">${d.year}</text>
+        <circle cx="${xs[i]}" cy="${y(vals[i])}" r="3.5" fill="#2dd4bf" opacity="0.9"/>
+      `).join('')}
+    `;
+  }
+
+  function initMap(origins) {
+    const map = L.map('map', { center: [20, 20], zoom: 2, attributionControl: false });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+      maxZoom: 8, minZoom: 1
+    }).addTo(map);
+    const maxVal = Math.max(...origins.map(o => o.displaced));
+    origins.forEach(origin => {
+      const coords = COORDS[origin.country];
+      if (!coords) return;
+      const radius = 8 + (origin.displaced / maxVal) * 28;
+      const circle = L.circleMarker(coords, {
+        radius, fillColor: '#2dd4bf', color: '#2dd4bf',
+        weight: 1, opacity: 0.8, fillOpacity: 0.25
+      }).addTo(map);
+      circle.bindPopup(`
+        <div class="popup-country">${origin.country}</div>
+        <div class="popup-row">
+          <span class="popup-label">Displaced</span>
+          <span class="popup-val">${fmt(origin.displaced)}</span>
+        </div>
+        <a class="popup-link" href="${countryURL(origin.country)}">View full profile →</a>
+      `);
+      circle.on('mouseover', function() { this.setStyle({ fillOpacity: 0.5, weight: 2 }); this.openPopup(); });
+      circle.on('mouseout',  function() { this.setStyle({ fillOpacity: 0.25, weight: 1 }); });
+      circle.on('click',     function() { window.location.href = countryURL(origin.country); });
+    });
+  }
+
+  function renderFunding(appeals) {
+    const el = document.getElementById('funding-list');
+    el.innerHTML = appeals.map(a => {
+      const pctClass = a.pct < 40 ? 'pct-low' : a.pct < 70 ? 'pct-mid' : 'pct-high';
+      // Try to match appeal name to a known country for linking
+      const matchedCountry = Object.keys(COORDS).find(c => a.name.toLowerCase().includes(c.toLowerCase()));
+      const nameEl = matchedCountry
+        ? `<a class="funding-name" href="${countryURL(matchedCountry)}" title="${a.name}">${a.name}</a>`
+        : `<span class="funding-name" title="${a.name}">${a.name}</span>`;
+      return `
+        <div>
+          <div class="funding-meta">
+            ${nameEl}
+            <div class="funding-numbers">
+              <span class="funded-val">${fmtUSD(a.funded)} funded</span>
+              <span class="gap-val">${fmtUSD(a.gap)} gap</span>
+              <span class="pct-badge ${pctClass}">${a.pct}%</span>
+            </div>
+          </div>
+          <div class="funding-track">
+            <div class="funding-fill" data-pct="${a.pct}"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    requestAnimationFrame(() => {
+      el.querySelectorAll('.funding-fill').forEach(b => b.style.width = b.dataset.pct + '%');
+    });
+  }
+
+  // ── Dashboard CSV download ───────────────────────────────
+  let _dashboardData = null;
+
+  function downloadDashboardCSV() {
+    if (!_dashboardData) return;
+    const d = _dashboardData;
+
+    const rows = [
+      ['Refuji Watch — Global Data Export'],
+      ['Generated', d.last_updated],
+      [],
+      ['GLOBAL TOTALS'],
+      ['Metric', 'Count'],
+      ['Total Displaced', d.total_displaced],
+      ['Refugees', d.refugees],
+      ['Asylum Seekers', d.asylum_seekers],
+      ['Internally Displaced', d.internally_displaced],
+      [],
+      ['TOP ORIGIN COUNTRIES'],
+      ['Country', 'Displaced'],
+      ...d.top_origin_countries.map(c => [c.country, c.displaced]),
+      [],
+      ['TOP HOST COUNTRIES'],
+      ['Country', 'Refugees Hosted'],
+      ...d.top_host_countries.map(c => [c.country, c.hosted]),
+      [],
+      ['YEARLY TREND'],
+      ['Year', 'Total Displaced'],
+      ...d.yearly_trend.map(t => [t.year, t.total]),
+      [],
+      ['ALL COUNTRIES'],
+      ['Country', 'Refugees', 'Asylum Seekers', 'IDPs', 'Total', 'Type'],
+      ...Object.entries(d.country_details)
+        .map(([name, c]) => [
+          name,
+          c.latest?.refugees || 0,
+          c.latest?.asylum_seekers || 0,
+          c.latest?.idps || 0,
+          c.latest?.total || 0,
+          c.is_origin && c.is_host ? 'Origin & Host' : c.is_origin ? 'Origin' : 'Host'
+        ])
+        .sort((a, b) => b[4] - a[4])
+    ];
+
+    const csv = rows.map(r => r.map(v => '"' + v + '"').join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `displacement-watch-${d.last_updated}.csv`;
+    a.click();
+  }
+
+  // ── Country search ──────────────────────────────────────
+  let allCountries = [];
+
+  function initSearch(countryDetails) {
+    allCountries = Object.entries(countryDetails).map(([name, d]) => ({
+      name,
+      total: d.latest?.total || 0,
+      is_origin: d.is_origin,
+      is_host: d.is_host
+    })).sort((a, b) => b.total - a.total);
+
+    const input   = document.getElementById('country-search');
+    const results = document.getElementById('search-results');
+
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      if (!q) { results.classList.remove('open'); return; }
+
+      const matches = allCountries
+        .filter(c => c.name.toLowerCase().includes(q))
+        .slice(0, 8);
+
+      if (matches.length === 0) {
+        results.innerHTML = '<div class="search-no-results">No countries found</div>';
+      } else {
+        results.innerHTML = matches.map(c => `
+          <a class="search-result-item" href="country.html?country=${encodeURIComponent(c.name)}">
+            <span class="result-name">${c.name}</span>
+            <span class="result-stat">${c.total > 0 ? fmt(c.total) + ' displaced' : c.is_host ? 'Host country' : ''}</span>
+            <span class="result-arrow">→</span>
+          </a>
+        `).join('');
+      }
+      results.classList.add('open');
+    });
+
+    // Close on click outside
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search-wrap')) {
+        results.classList.remove('open');
+      }
+    });
+
+    // Navigate on Enter
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const first = results.querySelector('.search-result-item');
+        if (first) window.location.href = first.href;
+      }
+    });
+  }
+
+  async function loadData() {
+    try {
+      const res = await fetch('/data/sample.json');
+      const d   = await res.json();
+
+      document.getElementById('stat-total').textContent    = fmt(d.total_displaced);
+      document.getElementById('stat-refugees').textContent = fmt(d.refugees);
+      document.getElementById('stat-asylum').textContent   = fmt(d.asylum_seekers);
+      document.getElementById('stat-idp').textContent      = fmt(d.internally_displaced);
+      document.getElementById('updated-label').textContent = 'Updated ' + d.last_updated;
+      document.getElementById('footer-date').textContent   = 'Last updated: ' + d.last_updated;
+
+      document.getElementById('ticker-text').textContent =
+        'Total displaced: ' + fmt(d.total_displaced) + '  ·  ' +
+        d.top_origin_countries.map(c => c.country + ': ' + fmt(c.displaced)).join('  ·  ') +
+        '  ·  Refugees: ' + fmt(d.refugees) +
+        '  ·  Asylum seekers: ' + fmt(d.asylum_seekers);
+
+      renderBars('origins-list', d.top_origin_countries, 'displaced');
+      renderBars('hosts-list',   d.top_host_countries,   'hosted', 'host');
+      renderTrend(d.yearly_trend);
+      initMap(d.top_origin_countries);
+      if (d.funding_gaps && d.funding_gaps.length > 0) renderFunding(d.funding_gaps);
+      if (d.country_details) initSearch(d.country_details);
+      _dashboardData = d;
+
+    } catch(e) {
+      console.error('Could not load data:', e);
+    }
+  }
+
+  loadData();
+</script>
+</body>
+</html>

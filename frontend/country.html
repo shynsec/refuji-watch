@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Refuji Watch — Country</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0d; --surface: #141414; --border: #2a2a2a;
+      --accent: #2dd4bf; --accent2: #c0392b; --blue: #5b8dd9;
+      --text: #f0ede6; --muted: #888;
+      --serif: 'Playfair Display', Georgia, serif;
+      --mono: 'DM Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--mono); font-size: 13px;
+      line-height: 1.6; min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 3rem;
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .back-link {
+      display: flex; align-items: center; gap: 0.5rem;
+      color: var(--muted); text-decoration: none;
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); }
+    .back-arrow { font-size: 1rem; }
+    .site-name {
+      font-family: var(--serif); font-size: 1.2rem;
+      font-weight: 700; color: var(--text);
+    }
+    .site-name span { color: var(--accent); }
+
+    /* HERO */
+    .hero {
+      padding: 3rem 3rem 2rem;
+      border-bottom: 1px solid var(--border);
+      animation: fadeDown 0.5s ease both;
+    }
+    .hero-label {
+      font-size: 10px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 900; line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .hero-badges {
+      display: flex; gap: 0.6rem; flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .badge {
+      font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 3px 10px;
+      border: 1px solid var(--border); color: var(--muted);
+    }
+    .badge.origin { border-color: var(--accent); color: var(--accent); }
+    .badge.host   { border-color: var(--blue);   color: var(--blue);   }
+
+    /* MAIN */
+    main {
+      padding: 2.5rem 3rem;
+      display: grid; gap: 1.5rem;
+    }
+
+    /* STAT CARDS */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px; border: 1px solid var(--border); background: var(--border);
+    }
+    .stat-card {
+      background: var(--surface); padding: 1.5rem;
+      animation: fadeUp 0.4s ease both;
+    }
+    .stat-card:nth-child(1) { animation-delay: 0.05s; }
+    .stat-card:nth-child(2) { animation-delay: 0.10s; }
+    .stat-card:nth-child(3) { animation-delay: 0.15s; }
+    .stat-card:nth-child(4) { animation-delay: 0.20s; }
+    .stat-label {
+      font-size: 10px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .stat-number {
+      font-family: var(--serif);
+      font-size: clamp(1.6rem, 2.5vw, 2.4rem);
+      font-weight: 700; color: var(--accent); line-height: 1;
+    }
+    .stat-sub { margin-top: 0.3rem; font-size: 11px; color: var(--muted); }
+
+    /* PANEL */
+    .panel {
+      border: 1px solid var(--border); background: var(--surface);
+      animation: fadeUp 0.5s ease both; animation-delay: 0.3s;
+    }
+    .panel-header {
+      padding: 1rem 1.4rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title {
+      font-size: 10px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .panel-body { padding: 1.2rem 1.4rem; }
+
+    /* TWO COL */
+    .two-col {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+    }
+    @media (max-width: 700px) {
+      .two-col { grid-template-columns: 1fr; }
+      main, header, .hero { padding-left: 1.5rem; padding-right: 1.5rem; }
+    }
+
+    /* TREND CHART */
+    .chart-wrap { position: relative; height: 200px; margin-top: 0.5rem; }
+    svg.trend { width: 100%; height: 100%; overflow: visible; }
+    .line-refugees { fill: none; stroke: var(--accent); stroke-width: 2;
+      stroke-dasharray: 2000; stroke-dashoffset: 2000;
+      animation: drawLine 1.5s ease 0.5s forwards; }
+    .line-idps { fill: none; stroke: var(--blue); stroke-width: 2;
+      stroke-dasharray: 2000; stroke-dashoffset: 2000;
+      animation: drawLine 1.5s ease 0.7s forwards; }
+    .area-refugees { opacity: 0; animation: fadeIn 0.5s ease 2s forwards; }
+    .axis-label { fill: var(--muted); font-family: var(--mono); font-size: 10px; }
+
+    /* LEGEND */
+    .legend {
+      display: flex; gap: 1.2rem; margin-top: 0.8rem;
+      font-size: 11px; color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* BAR LIST */
+    .bar-list { display: flex; flex-direction: column; gap: 0.9rem; }
+    .bar-meta {
+      display: flex; justify-content: space-between;
+      margin-bottom: 0.3rem; font-size: 12px;
+    }
+    .bar-country { color: var(--text); }
+    .bar-value   { color: var(--accent); font-weight: 500; }
+    .bar-value.blue { color: var(--blue); }
+    .bar-track {
+      height: 4px; background: var(--border);
+      border-radius: 2px; overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; background: var(--accent);
+      border-radius: 2px; width: 0;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .bar-fill.blue { background: var(--blue); }
+
+    /* EMPTY STATE */
+    .empty {
+      color: var(--muted); font-size: 12px;
+      padding: 1rem 0; text-align: center;
+    }
+
+    /* CHART TOOLTIP */
+    .chart-tooltip {
+      position: absolute;
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      padding: 0.6rem 0.9rem;
+      font-size: 11px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .chart-tooltip.visible { opacity: 1; }
+    .tooltip-year {
+      font-family: var(--serif);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.3rem;
+    }
+    .tooltip-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1.2rem;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .tooltip-row span:last-child { color: var(--text); font-weight: 500; }
+    .chart-wrap { position: relative; }
+
+    /* DOWNLOAD */
+    .download-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); font-family: var(--mono);
+      font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 0.35rem 0.8rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .download-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .download-btn svg { width: 11px; height: 11px; }
+    .hero-actions { margin-top: 1rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border); padding: 1.2rem 3rem;
+      display: flex; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.5rem;
+      font-size: 10px; color: var(--muted); letter-spacing: 0.08em;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ANIMATIONS */
+    @keyframes drawLine { to { stroke-dashoffset: 0; } }
+    @keyframes fadeIn   { to { opacity: 1; } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* NOT FOUND */
+    .not-found {
+      padding: 4rem 3rem; text-align: center;
+    }
+    .not-found h2 {
+      font-family: var(--serif); font-size: 2rem;
+      color: var(--muted); margin-bottom: 1rem;
+    }
+    .not-found a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="back-link">
+    <span class="back-arrow">←</span> Back to Dashboard
+  </a>
+  <div class="site-name">Refuji <span>Watch</span></div>
+</header>
+
+<div id="app">
+  <div style="padding: 3rem; color: var(--muted); text-align: center;">
+    Loading country data...
+  </div>
+</div>
+
+<footer>
+  <span>Source: <a href="https://www.unhcr.org/refugee-statistics" target="_blank">UNHCR Refugee Data Finder</a></span>
+  <span id="footer-date">—</span>
+  <span>
+    Built by <a href="https://github.com/shynsec" target="_blank">shynsec</a> ·
+    <a href="https://github.com/shynsec/refuji-watch" target="_blank">View on GitHub</a>
+  </span>
+</footer>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────
+  function fmt(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+    return n || '0';
+  }
+
+  function getParam(key) {
+    return new URLSearchParams(window.location.search).get(key);
+  }
+
+  // ── Trend chart ──────────────────────────────────────────
+  function renderTrend(trend, svgId) {
+    const svg = document.getElementById(svgId);
+    if (!svg || !trend || trend.length === 0) return;
+
+    const W = 800, H = 160, PAD = { top: 10, right: 20, bottom: 30, left: 10 };
+    const xs    = trend.map((_, i) => PAD.left + i * (W - PAD.left - PAD.right) / (trend.length - 1));
+    const refs  = trend.map(d => d.refugees || 0);
+    const idps  = trend.map(d => d.idps || 0);
+    const total = trend.map(d => d.total || 0);
+    const allVals = [...refs, ...idps];
+    const minV = 0, maxV = Math.max(...allVals) * 1.1 || 1;
+    const y = v => PAD.top + (1 - (v - minV) / (maxV - minV)) * (H - PAD.top - PAD.bottom);
+
+    const refPts  = trend.map((d, i) => `${xs[i]},${y(refs[i])}`).join(' ');
+    const idpPts  = trend.map((d, i) => `${xs[i]},${y(idps[i])}`).join(' ');
+    const refArea = `M${xs[0]},${y(refs[0])} ` +
+      trend.slice(1).map((d, i) => `L${xs[i+1]},${y(refs[i+1])}`).join(' ') +
+      ` L${xs[xs.length-1]},${H - PAD.bottom} L${xs[0]},${H - PAD.bottom} Z`;
+
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="refGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#2dd4bf" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path class="area-refugees" d="${refArea}" fill="url(#refGrad)"/>
+      <polyline class="line-refugees" points="${refPts}"/>
+      ${idps.some(v => v > 0) ? `<polyline class="line-idps" points="${idpPts}"/>` : ''}
+      ${trend.map((d, i) => `
+        <text class="axis-label" x="${xs[i]}" y="${H - PAD.bottom + 16}" text-anchor="middle">${d.year}</text>
+
+        <!-- Refugee dot hit target -->
+        <circle
+          class="trend-dot"
+          cx="${xs[i]}" cy="${y(refs[i])}" r="5"
+          fill="#2dd4bf" opacity="0"
+          data-year="${d.year}"
+          data-line="refugees"
+          data-refugees="${refs[i]}"
+          data-asylum="${d.asylum_seekers || 0}"
+          data-idps="${idps[i]}"
+          data-total="${total[i]}"
+          style="cursor:pointer"
+        />
+        <circle cx="${xs[i]}" cy="${y(refs[i])}" r="3" fill="#2dd4bf" opacity="0.9" style="pointer-events:none"/>
+
+        <!-- IDP dot hit target (only if IDPs exist) -->
+        ${idps[i] > 0 ? `
+        <circle
+          class="trend-dot idp-dot"
+          cx="${xs[i]}" cy="${y(idps[i])}" r="5"
+          fill="#5b8dd9" opacity="0"
+          data-year="${d.year}"
+          data-line="idps"
+          data-refugees="${refs[i]}"
+          data-asylum="${d.asylum_seekers || 0}"
+          data-idps="${idps[i]}"
+          data-total="${total[i]}"
+          style="cursor:pointer"
+        />
+        <circle cx="${xs[i]}" cy="${y(idps[i])}" r="3" fill="#5b8dd9" opacity="0.9" style="pointer-events:none"/>
+        ` : ''}
+      `).join('')}
+    `;
+
+    // Create tooltip
+    const wrap    = svg.closest('.chart-wrap');
+    let tooltip   = wrap.querySelector('.chart-tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.className = 'chart-tooltip';
+      wrap.appendChild(tooltip);
+    }
+
+    // Wire up hover on invisible larger hit targets
+    svg.querySelectorAll('.trend-dot').forEach(dot => {
+      dot.addEventListener('mouseenter', e => {
+        const year     = dot.dataset.year;
+        const refugees = parseInt(dot.dataset.refugees);
+        const asylum   = parseInt(dot.dataset.asylum);
+        const idpVal   = parseInt(dot.dataset.idps);
+        const tot      = parseInt(dot.dataset.total);
+        const hasIDPs  = idpVal > 0;
+
+        const line = dot.dataset.line;
+        const isIDPLine = line === 'idps';
+
+        tooltip.innerHTML = `
+          <div class="tooltip-year" style="color:${isIDPLine ? '#5b8dd9' : '#2dd4bf'}">${year}</div>
+          <div class="tooltip-row"><span>Total</span><span>${fmt(tot)}</span></div>
+          <div class="tooltip-row"><span>Refugees</span><span>${fmt(refugees)}</span></div>
+          <div class="tooltip-row"><span>Asylum Seekers</span><span>${fmt(asylum)}</span></div>
+          ${hasIDPs ? `<div class="tooltip-row" style="${isIDPLine ? 'color:#5b8dd9' : ''}"><span>Internally Displaced</span><span>${fmt(idpVal)}</span></div>` : ''}
+        `;
+
+        // Position tooltip — flip left if near right edge
+        const svgRect  = svg.getBoundingClientRect();
+        const dotRect  = dot.getBoundingClientRect();
+        const relX     = dotRect.left - svgRect.left + dotRect.width / 2;
+        const relY     = dotRect.top  - svgRect.top;
+        const flipLeft = relX > svgRect.width * 0.7;
+
+        tooltip.style.left    = flipLeft ? 'auto' : (relX + 10) + 'px';
+        tooltip.style.right   = flipLeft ? (svgRect.width - relX + 10) + 'px' : 'auto';
+        tooltip.style.top     = (relY - 10) + 'px';
+        tooltip.classList.add('visible');
+
+        // Highlight dot
+        const isIDP = dot.dataset.line === 'idps';
+        dot.setAttribute('fill', isIDP ? '#5b8dd9' : '#2dd4bf');
+        dot.setAttribute('opacity', '0.3');
+      });
+
+      dot.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('visible');
+        dot.setAttribute('opacity', '0');
+      });
+    });
+  }
+
+  // ── Bar list ─────────────────────────────────────────────
+  function renderBars(containerId, items, valueKey, colorClass) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!items || items.length === 0) {
+      el.innerHTML = '<div class="empty">No data available</div>';
+      return;
+    }
+    const max = Math.max(...items.map(i => i[valueKey]));
+    el.innerHTML = items.map(item => `
+      <div>
+        <div class="bar-meta">
+          <span class="bar-country">${item.country}</span>
+          <span class="bar-value ${colorClass || ''}">${fmt(item[valueKey])}</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ${colorClass || ''}" data-pct="${(item[valueKey] / max * 100).toFixed(1)}"></div>
+        </div>
+      </div>
+    `).join('');
+    requestAnimationFrame(() => {
+      el.querySelectorAll('.bar-fill').forEach(b => b.style.width = b.dataset.pct + '%');
+    });
+  }
+
+  // ── Render page ──────────────────────────────────────────
+  function renderPage(countryName, data) {
+    const d      = data.country_details[countryName];
+    const latest = d.latest || {};
+    const isBoth = d.is_origin && d.is_host;
+    const hasIDPs = (latest.idps || 0) > 0;
+
+    // For dual-role countries, compute hosted total from top_origins_hosted
+    const hostedTotal = (d.top_origins_hosted || []).reduce((sum, o) => sum + o.count, 0);
+
+    document.title = `${countryName} — Refuji Watch`;
+
+    document.getElementById('app').innerHTML = `
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-label">Country Profile · ${data.last_updated}</div>
+        <h1>${countryName}</h1>
+        <div class="hero-badges">
+          ${d.is_origin ? '<span class="badge origin">Origin Country</span>' : ''}
+          ${d.is_host   ? '<span class="badge host">Host Country</span>'   : ''}
+        </div>
+        <div class="hero-actions">
+          <button class="download-btn" id="csv-btn">
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M6 1v7M3 5l3 3 3-3M1 10h10"/>
+            </svg>
+            Download CSV
+          </button>
+        </div>
+      </div>
+
+      <main>
+
+        <!-- ORIGIN STATS — shown if country produces refugees -->
+        ${d.is_origin ? `
+        <div style="font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); padding: 0 0 0.5rem;">
+          ${isBoth ? 'As an Origin Country' : ''}
+        </div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Total Displaced</div>
+            <div class="stat-number">${fmt(latest.total || 0)}</div>
+            <div class="stat-sub">people have fled ${countryName}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Refugees</div>
+            <div class="stat-number">${fmt(latest.refugees || 0)}</div>
+            <div class="stat-sub">fled across borders</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Asylum Seekers</div>
+            <div class="stat-number">${fmt(latest.asylum_seekers || 0)}</div>
+            <div class="stat-sub">awaiting decisions</div>
+          </div>
+          ${hasIDPs ? `
+          <div class="stat-card">
+            <div class="stat-label">Internally Displaced</div>
+            <div class="stat-number">${fmt(latest.idps || 0)}</div>
+            <div class="stat-sub">within own country</div>
+          </div>` : ''}
+        </div>` : ''}
+
+        <!-- HOST STATS — shown if country hosts refugees -->
+        ${d.is_host && hostedTotal > 0 ? `
+        <div style="font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); padding: ${d.is_origin ? '1.5rem' : '0'} 0 0.5rem;">
+          ${isBoth ? 'As a Host Country' : ''}
+        </div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Refugees Hosted</div>
+            <div class="stat-number">${fmt(hostedTotal)}</div>
+            <div class="stat-sub">people welcomed</div>
+          </div>
+          ${(d.top_origins_hosted || []).slice(0, 3).map(o => `
+          <div class="stat-card">
+            <div class="stat-label">From ${o.country}</div>
+            <div class="stat-number">${fmt(o.count)}</div>
+            <div class="stat-sub">refugees hosted</div>
+          </div>`).join('')}
+        </div>` : ''}
+
+        <!-- TREND CHART -->
+        ${d.trend && d.trend.length > 0 ? `
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">
+              ${d.is_origin ? 'People Displaced from ' + countryName : 'Refugees Hosted by ' + countryName}
+              · 2018–${data.last_updated.slice(0,4)}
+            </span>
+          </div>
+          <div class="panel-body">
+            <div class="chart-wrap">
+              <svg class="trend" id="trend-svg" viewBox="0 0 800 160" preserveAspectRatio="none"></svg>
+            </div>
+            <div class="legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background: var(--accent)"></div>
+                ${d.is_origin ? 'Refugees & Asylum Seekers' : 'Total Hosted'}
+              </div>
+              ${hasIDPs ? `
+              <div class="legend-item">
+                <div class="legend-dot" style="background: var(--blue)"></div>
+                Internally Displaced
+              </div>` : ''}
+            </div>
+          </div>
+        </div>` : ''}
+
+        <!-- WHERE REFUGEES GO / WHO IS HOSTED -->
+        <div class="two-col">
+          ${d.top_hosts && d.top_hosts.length > 0 ? `
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Where refugees from ${countryName} go</span>
+            </div>
+            <div class="panel-body">
+              <div class="bar-list" id="hosts-bars"></div>
+            </div>
+          </div>` : '<div></div>'}
+
+          ${d.top_origins_hosted && d.top_origins_hosted.length > 0 ? `
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Refugees ${countryName} hosts</span>
+            </div>
+            <div class="panel-body">
+              <div class="bar-list" id="origins-bars"></div>
+            </div>
+          </div>` : '<div></div>'}
+        </div>
+
+      </main>
+    `;
+
+    renderTrend(d.trend, 'trend-svg');
+    renderBars('hosts-bars',   d.top_hosts,           'hosted', '');
+    renderBars('origins-bars', d.top_origins_hosted,  'count',  'blue');
+
+    document.getElementById('footer-date').textContent = 'Last updated: ' + data.last_updated;
+
+    // Wire up download button
+    const csvBtn = document.getElementById('csv-btn');
+    if (csvBtn) {
+      csvBtn.addEventListener('click', () => downloadCountryCSV(countryName, d, data.last_updated));
+    }
+  }
+
+  // ── Not found ────────────────────────────────────────────
+  function renderNotFound(countryName) {
+    document.getElementById('app').innerHTML = `
+      <div class="not-found">
+        <h2>No data found for "${countryName}"</h2>
+        <p style="color: var(--muted); margin-bottom: 1rem;">
+          This country may not appear in the current dataset.
+        </p>
+        <a href="index.html">← Back to Dashboard</a>
+      </div>
+    `;
+  }
+
+  // ── CSV Download ─────────────────────────────────────────
+  function downloadCountryCSV(countryName, d, lastUpdated) {
+    const latest  = d.latest || {};
+    const rows = [
+      [`Refuji Watch — ${countryName} Country Profile`],
+      ['Generated', lastUpdated],
+      ['Source', 'UNHCR Refugee Data Finder'],
+      [],
+      ['LATEST FIGURES (2023)'],
+      ['Metric', 'Count'],
+      ['Total Displaced', latest.total || 0],
+      ['Refugees', latest.refugees || 0],
+      ['Asylum Seekers', latest.asylum_seekers || 0],
+      ['Internally Displaced', latest.idps || 0],
+    ];
+
+    if (d.trend && d.trend.length > 0) {
+      rows.push([]);
+      rows.push(['YEARLY TREND']);
+      rows.push(['Year', 'Refugees', 'Asylum Seekers', 'IDPs', 'Total']);
+      d.trend.forEach(t => rows.push([t.year, t.refugees || 0, t.asylum_seekers || 0, t.idps || 0, t.total || 0]));
+    }
+
+    if (d.top_hosts && d.top_hosts.length > 0) {
+      rows.push([]);
+      rows.push([`WHERE REFUGEES FROM ${countryName.toUpperCase()} GO`]);
+      rows.push(['Host Country', 'Refugees Hosted']);
+      d.top_hosts.forEach(h => rows.push([h.country, h.hosted]));
+    }
+
+    if (d.top_origins_hosted && d.top_origins_hosted.length > 0) {
+      rows.push([]);
+      rows.push([`REFUGEES ${countryName.toUpperCase()} HOSTS`]);
+      rows.push(['Origin Country', 'Count']);
+      d.top_origins_hosted.forEach(o => rows.push([o.country, o.count]));
+    }
+
+    const csv  = rows.map(r => r.map(v => '"' + v + '"').join(',')).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `${countryName.toLowerCase().replace(/\s+/g,'-')}-displacement-${lastUpdated}.csv`;
+    a.click();
+  }
+
+  // ── Init ─────────────────────────────────────────────────
+  async function init() {
+    const countryName = decodeURIComponent(getParam('country') || '');
+
+    if (!countryName) {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    try {
+      const res  = await fetch('/data/sample.json');
+      const data = await res.json();
+
+      if (!data.country_details || !data.country_details[countryName]) {
+        renderNotFound(countryName);
+        return;
+      }
+
+      renderPage(countryName, data);
+
+    } catch(e) {
+      console.error('Could not load data:', e);
+      renderNotFound(countryName);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
