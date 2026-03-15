@@ -1,6 +1,6 @@
-# 🧭 Refuji Watch
+# Refuji Watch
 
-> A real-time global displacement dashboard powered by live UNHCR & OCHA data.
+A real-time global displacement dashboard powered by live UNHCR & OCHA data.
 
 ![Dashboard Preview](screenshots/1.png)
 ![Dashboard Preview](screenshots/2.png)
