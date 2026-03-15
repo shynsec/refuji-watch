@@ -2,7 +2,7 @@
 
 A real-time global displacement dashboard powered by live UNHCR & OCHA data.
 
-![Dashboard Preview](screenshots/1.mp4)
+![Dashboard Preview](screenshots/refuji-shot.png)
 
 ---
 
