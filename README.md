@@ -4,6 +4,8 @@ A real-time global displacement dashboard powered by live UNHCR & OCHA data.
 
 ![Dashboard Preview](screenshots/refuji-shot.png)
 
+LIVE PREVIEW: https://refuji-watch.netlify.app/
+
 ---
 
 ## What is Refuji Watch?
