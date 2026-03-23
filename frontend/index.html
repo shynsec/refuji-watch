@@ -297,6 +297,54 @@
     footer a { color: var(--accent); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
+    /* CRISIS SEVERITY */
+    .crisis-list { display: flex; flex-direction: column; gap: 0; }
+    .crisis-item {
+      display: grid;
+      grid-template-columns: 1.5rem 1fr auto auto;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .crisis-item:last-child { border-bottom: none; }
+    .crisis-item:hover { background: rgba(255,255,255,0.02); }
+    .crisis-rank {
+      font-size: 10px; color: var(--muted);
+      font-family: var(--mono); text-align: center;
+    }
+    .crisis-country {
+      font-size: 12px; color: var(--text);
+      transition: color 0.15s;
+    }
+    .crisis-item:hover .crisis-country { color: var(--accent); }
+    .crisis-bar-wrap {
+      flex: 1; height: 3px; background: var(--border);
+      border-radius: 2px; overflow: hidden; min-width: 60px;
+    }
+    .crisis-bar {
+      height: 100%; border-radius: 2px; width: 0;
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+    .crisis-badge {
+      font-size: 9px; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 2px 8px;
+      border-radius: 2px; white-space: nowrap; font-weight: 500;
+    }
+    .badge-critical { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .badge-severe   { background: rgba(251,146,60,0.15); color: #fb923c; }
+    .badge-high     { background: rgba(250,204,21,0.15); color: #facc15; }
+    .badge-moderate { background: rgba(45,212,191,0.15); color: #2dd4bf; }
+    .badge-low      { background: rgba(74,222,128,0.15); color: #4ade80; }
+    .bar-critical { background: #ef4444; }
+    .bar-severe   { background: #fb923c; }
+    .bar-high     { background: #facc15; }
+    .bar-moderate { background: #2dd4bf; }
+    .bar-low      { background: #4ade80; }
+
     @keyframes drawLine { to { stroke-dashoffset: 0; } }
     @keyframes fadeIn   { to { opacity: 1; } }
     @keyframes fadeUp {
@@ -425,6 +473,17 @@
       <div class="funding-list" id="funding-list"></div>
     </div>
   </div>
+  <!-- CRISIS SEVERITY -->
+  <div class="panel full-width" style="animation-delay:0.9s">
+    <div class="panel-header">
+      <span class="panel-title">Crisis Severity Index — top 10 most critical situations</span>
+      <span style="font-size:10px;color:var(--muted);letter-spacing:0.06em">Score based on scale, funding gap & trend</span>
+    </div>
+    <div class="panel-body">
+      <div class="crisis-list" id="crisis-list"></div>
+    </div>
+  </div>
+
 </main>
 
 <footer>
@@ -678,6 +737,31 @@
     });
   }
 
+  // ── Crisis severity ──────────────────────────────────────
+  function renderCrisis(scores) {
+    const el = document.getElementById('crisis-list');
+    if (!el || !scores || scores.length === 0) return;
+
+    el.innerHTML = scores.map((s, i) => {
+      const cls   = s.label.toLowerCase();
+      const width = (s.score / 10 * 100).toFixed(1);
+      return `
+        <a class="crisis-item" href="country.html?country=${encodeURIComponent(s.country)}">
+          <span class="crisis-rank">${i + 1}</span>
+          <span class="crisis-country">${s.country}</span>
+          <div class="crisis-bar-wrap">
+            <div class="crisis-bar bar-${cls}" data-w="${width}"></div>
+          </div>
+          <span class="crisis-badge badge-${cls}">${s.label}</span>
+        </a>
+      `;
+    }).join('');
+
+    requestAnimationFrame(() => {
+      el.querySelectorAll('.crisis-bar').forEach(b => b.style.width = b.dataset.w + '%');
+    });
+  }
+
   async function loadData() {
     try {
       const res = await fetch('/data/sample.json');
@@ -701,6 +785,7 @@
       renderTrend(d.yearly_trend);
       initMap(d.top_origin_countries);
       if (d.funding_gaps && d.funding_gaps.length > 0) renderFunding(d.funding_gaps);
+      if (d.crisis_scores && d.crisis_scores.length > 0) renderCrisis(d.crisis_scores);
       if (d.country_details) initSearch(d.country_details);
       _dashboardData = d;
 

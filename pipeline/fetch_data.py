@@ -28,7 +28,7 @@ def safe_int(val):
     except (ValueError, TypeError):
         return 0
 
-INVALID_NAMES = {"unknown", "various", "stateless", "-", "", "other", "n/a", "tibetan"}
+INVALID_NAMES = {"unknown", "various", "stateless", "-", "", "other", "n/a", "tibetan", "palestinian"}
 
 def is_valid(name):
     return bool(name and name.strip().lower() not in INVALID_NAMES)
@@ -50,8 +50,6 @@ COUNTRY_NAMES = {
     "United States of America":                        "United States",
     "occupied Palestinian territory":                  "Palestine",
     "State of Palestine":                              "Palestine",
-    "Palestinian":                                     "Palestine",
-    "Palestinian Territory":                           "Palestine",
     "Lao People's Dem. Rep.":                          "Laos",
     "Dem. People's Rep. of Korea":                     "North Korea",
     "Rep. of Korea":                                   "South Korea",
@@ -354,6 +352,119 @@ def fetch_country_details(countries):
     return details
 
 # -----------------------------------
+# Crisis Severity Score
+# -----------------------------------
+
+# Approximate 2023 populations (millions) for key countries
+POPULATIONS = {
+    "Afghanistan": 42, "Syria": 22, "Ukraine": 44, "South Sudan": 11,
+    "DR Congo": 102, "Somalia": 18, "Ethiopia": 126, "Yemen": 34,
+    "Sudan": 46, "Myanmar": 54, "Central African Republic": 5,
+    "Mali": 22, "Burkina Faso": 22, "Nigeria": 220, "Iraq": 42,
+    "Colombia": 52, "Venezuela": 29, "Haiti": 12, "Libya": 7,
+    "Eritrea": 3, "Mozambique": 33, "Zimbabwe": 16, "Cameroon": 28,
+    "Chad": 18, "Niger": 26, "Burundi": 13, "Rwanda": 14,
+    "Uganda": 48, "Kenya": 55, "Tanzania": 65, "Iran": 87,
+    "Turkey": 85, "Pakistan": 230, "Germany": 84, "Russia": 144,
+    "Lebanon": 5, "Jordan": 10, "Bangladesh": 170, "India": 1400,
+    "Thailand": 72, "Malaysia": 33, "Indonesia": 277, "Palestine": 5,
+    "Georgia": 4, "Armenia": 3, "Azerbaijan": 10, "Serbia/Kosovo": 7,
+    "Bosnia and Herzegovina": 3, "Croatia": 4, "Greece": 11,
+    "Egypt": 105, "Algeria": 45, "Morocco": 37, "Tunisia": 12,
+    "Mauritania": 5, "Senegal": 17, "Guinea": 13, "Ivory Coast": 27,
+    "Ghana": 33, "Togo": 9, "Benin": 13, "Peru": 33, "Ecuador": 18,
+    "Brazil": 215, "Colombia": 52, "Mexico": 130, "Costa Rica": 5,
+    "Panama": 4, "Honduras": 10, "El Salvador": 6, "Guatemala": 17,
+    "Cuba": 11, "Dominican Republic": 11, "Jamaica": 3,
+    "Sri Lanka": 22, "Nepal": 30, "Philippines": 115,
+    "Papua New Guinea": 10, "Solomon Islands": 1,
+}
+
+def calculate_severity_scores(country_details, funding_gaps):
+    """
+    Calculate crisis severity score (1-10) for each country.
+    Factor 1 - Scale (40%): displaced as % of population
+    Factor 2 - Funding gap (30%): how underfunded the response is
+    Factor 3 - Trend (30%): is displacement rising?
+    """
+    print("Calculating crisis severity scores...")
+
+    # Build funding gap lookup by country name
+    funding_lookup = {}
+    for f in funding_gaps:
+        name = f["name"].lower()
+        for country in POPULATIONS.keys():
+            if country.lower() in name:
+                gap_pct = 100 - f["pct"]  # higher gap = higher severity
+                funding_lookup[country] = gap_pct
+
+    scores = []
+
+    for country, d in country_details.items():
+        if not d.get("is_origin"):
+            continue
+
+        latest = d.get("latest", {})
+        total  = latest.get("total", 0)
+        if total < 10000:
+            continue
+
+        trend = d.get("trend", [])
+
+        # Factor 1 — Scale (displaced as % of population)
+        pop = POPULATIONS.get(country, 50) * 1_000_000
+        scale_pct = min((total / pop) * 100, 50)  # cap at 50%
+        scale_score = (scale_pct / 50) * 10
+
+        # Factor 2 — Funding gap
+        gap_pct = funding_lookup.get(country, 50)  # default 50% gap
+        funding_score = (gap_pct / 100) * 10
+
+        # Factor 3 — Trend (% change over last 3 years)
+        trend_score = 5  # neutral default
+        if len(trend) >= 3:
+            recent  = trend[-1].get("total", 0)
+            older   = trend[-3].get("total", 0)
+            if older > 0:
+                change_pct = ((recent - older) / older) * 100
+                # +50% change = score 10, -50% change = score 0
+                trend_score = min(max((change_pct + 50) / 10, 0), 10)
+
+        # Weighted combined score
+        final_score = round(
+            (scale_score * 0.4) +
+            (funding_score * 0.3) +
+            (trend_score * 0.3),
+            1
+        )
+        final_score = min(max(final_score, 0.1), 10.0)
+
+        # Severity label
+        if final_score >= 7.5:
+            label = "Critical"
+        elif final_score >= 5.5:
+            label = "Severe"
+        elif final_score >= 3.5:
+            label = "High"
+        elif final_score >= 2.0:
+            label = "Moderate"
+        else:
+            label = "Low"
+
+        scores.append({
+            "country": country,
+            "score":   final_score,
+            "label":   label,
+            "total":   total,
+            "pop":     pop
+        })
+
+    # Sort by score descending, take top 10
+    scores = sorted(scores, key=lambda x: x["score"], reverse=True)[:10]
+    print(f"  Top crisis: {[(s['country'], s['score'], s['label']) for s in scores[:3]]}")
+    return scores
+
+# -----------------------------------
 # Main
 # -----------------------------------
 if __name__ == "__main__":
@@ -388,6 +499,15 @@ if __name__ == "__main__":
     print(f"  Total countries to process: {len(all_countries)}")
 
     country_details = fetch_country_details(list(all_countries))
+    crisis_scores   = calculate_severity_scores(country_details, funding)
+
+    # Attach individual crisis score to each country detail
+    for s in crisis_scores:
+        if s["country"] in country_details:
+            country_details[s["country"]]["crisis"] = {
+                "score": s["score"],
+                "label": s["label"]
+            }
 
     output = {
         "total_displaced":      totals["total"],
@@ -399,6 +519,7 @@ if __name__ == "__main__":
         "top_host_countries":   hosts,
         "yearly_trend":         trend,
         "funding_gaps":         funding,
+        "crisis_scores":        crisis_scores,
         "country_details":      country_details
     }
 

@@ -203,6 +203,154 @@
     .tooltip-row span:last-child { color: var(--text); font-weight: 500; }
     .chart-wrap { position: relative; }
 
+    /* YEAR COMPARISON */
+    .compare-panel { animation-delay: 0.7s; }
+
+    .slider-wrap {
+      display: flex; align-items: center; gap: 1.2rem;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .slider-label {
+      font-size: 10px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted);
+      white-space: nowrap;
+    }
+    .year-range-wrap {
+      flex: 1; position: relative; height: 28px;
+      display: flex; align-items: center;
+    }
+    .year-track {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: var(--border); border-radius: 1px;
+    }
+    .year-track-fill {
+      position: absolute; height: 2px;
+      background: var(--accent); border-radius: 1px;
+    }
+    .year-slider {
+      position: absolute; width: 100%;
+      -webkit-appearance: none; appearance: none;
+      background: transparent; outline: none;
+      height: 28px; margin: 0; cursor: pointer;
+      pointer-events: none;
+    }
+    .year-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--bg);
+      pointer-events: all; cursor: grab; transition: transform 0.15s;
+    }
+    .year-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.2); }
+    .year-slider.slider-b { pointer-events: none; }
+    .year-slider.slider-b::-webkit-slider-thumb { pointer-events: all; }
+
+    .year-badges {
+      display: flex; gap: 0.5rem;
+    }
+    .year-badge {
+      font-size: 11px; padding: 3px 10px;
+      border: 1px solid var(--accent); color: var(--accent);
+      font-family: var(--mono);
+    }
+    .year-badge.b { border-color: var(--blue); color: var(--blue); }
+
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem;
+      align-items: start;
+    }
+    .compare-col { display: flex; flex-direction: column; gap: 0.6rem; }
+    .compare-col.b .c-stat-number { color: var(--blue); }
+    .compare-col.b .c-stat-bar { background: var(--blue); }
+
+    .c-stat { }
+    .c-stat-label {
+      font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.2rem;
+    }
+    .c-stat-number {
+      font-family: var(--serif); font-size: 1.6rem;
+      font-weight: 700; color: var(--accent); line-height: 1;
+    }
+    .c-stat-track {
+      height: 3px; background: var(--border);
+      border-radius: 2px; margin-top: 0.3rem; overflow: hidden;
+    }
+    .c-stat-bar {
+      height: 100%; background: var(--accent);
+      border-radius: 2px; width: 0;
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .compare-arrow {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0.4rem; padding-top: 1.8rem;
+    }
+    .change-pct {
+      font-family: var(--serif); font-size: 1.1rem;
+      font-weight: 700; text-align: center;
+    }
+    .change-pct.up   { color: #ef4444; }
+    .change-pct.down { color: #4ade80; }
+    .change-pct.flat { color: var(--muted); }
+    .change-label {
+      font-size: 9px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); text-align: center;
+    }
+
+    /* CRISIS BADGE */
+    .crisis-score-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 4px 12px; font-size: 11px;
+      font-family: var(--mono); letter-spacing: 0.08em;
+    }
+    .crisis-score-num {
+      font-family: var(--serif); font-size: 1.1rem;
+      font-weight: 700; line-height: 1;
+    }
+    .badge-critical { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-severe   { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+    .badge-high     { background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3); }
+    .badge-moderate { background: rgba(45,212,191,0.15); color: #2dd4bf; border: 1px solid rgba(45,212,191,0.3); }
+    .badge-low      { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+
+    /* NEWS FEED */
+    .news-list { display: flex; flex-direction: column; gap: 0; }
+    .news-item {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+      align-items: start;
+    }
+    .news-item:last-child { border-bottom: none; }
+    .news-title {
+      font-size: 12px;
+      color: var(--text);
+      text-decoration: none;
+      line-height: 1.5;
+      transition: color 0.15s;
+    }
+    .news-title:hover { color: var(--accent); }
+    .news-meta {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      letter-spacing: 0.06em;
+    }
+    .news-date {
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+      padding-top: 2px;
+    }
+    .news-empty {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 1rem 0;
+      text-align: center;
+    }
+
     /* DOWNLOAD */
     .download-btn {
       display: inline-flex; align-items: center; gap: 0.4rem;
@@ -452,6 +600,11 @@
         <div class="hero-badges">
           ${d.is_origin ? '<span class="badge origin">Origin Country</span>' : ''}
           ${d.is_host   ? '<span class="badge host">Host Country</span>'   : ''}
+          ${d.crisis ? `
+          <span class="crisis-score-badge badge-${d.crisis.label.toLowerCase()}">
+            <span class="crisis-score-num">${d.crisis.score}</span>
+            <span>/ 10 · ${d.crisis.label}</span>
+          </span>` : ''}
         </div>
         <div class="hero-actions">
           <button class="download-btn" id="csv-btn">
@@ -563,12 +716,217 @@
           </div>` : '<div></div>'}
         </div>
 
+        <!-- YEAR COMPARISON -->
+        ${d.trend && d.trend.length > 1 ? `
+        <div class="panel compare-panel">
+          <div class="panel-header">
+            <span class="panel-title">Compare Years</span>
+            <div class="year-badges">
+              <span class="year-badge" id="badge-a">—</span>
+              <span style="font-size:10px;color:var(--muted);align-self:center">vs</span>
+              <span class="year-badge b" id="badge-b">—</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <!-- Slider -->
+            <div class="slider-wrap">
+              <span class="slider-label">Drag to select years</span>
+              <div class="year-range-wrap" id="range-wrap">
+                <div class="year-track"></div>
+                <div class="year-track-fill" id="track-fill"></div>
+                <input type="range" class="year-slider slider-a" id="slider-a"/>
+                <input type="range" class="year-slider slider-b" id="slider-b"/>
+              </div>
+            </div>
+            <!-- Comparison chart -->
+            <div class="chart-wrap" style="margin-bottom:1.5rem">
+              <svg class="trend" id="compare-svg" viewBox="0 0 800 160" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="compGradA" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.15"/>
+                    <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0"/>
+                  </linearGradient>
+                  <linearGradient id="compGradB" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#5b8dd9" stop-opacity="0.15"/>
+                    <stop offset="100%" stop-color="#5b8dd9" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="legend" style="margin-top:0.5rem">
+                <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div><span id="legend-a">Year A</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div><span id="legend-b">Year B</span></div>
+              </div>
+            </div>
+            <!-- Stat comparison -->
+            <div class="compare-grid" id="compare-grid"></div>
+          </div>
+        </div>` : ''}
+
+        <!-- NEWS FEED -->
+        ${d.news && d.news.length > 0 ? `
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Latest Reports &amp; News</span>
+            <span style="font-size:10px;color:var(--muted);letter-spacing:0.06em">Source: ReliefWeb</span>
+          </div>
+          <div class="panel-body">
+            <div class="news-list" id="news-list"></div>
+          </div>
+        </div>` : ''}
+
       </main>
     `;
 
     renderTrend(d.trend, 'trend-svg');
     renderBars('hosts-bars',   d.top_hosts,           'hosted', '');
     renderBars('origins-bars', d.top_origins_hosted,  'count',  'blue');
+
+    // ── Year comparison ──────────────────────────────────────
+    if (d.trend && d.trend.length > 1) {
+      const years  = d.trend.map(t => t.year);
+      const minY   = years[0];
+      const maxY   = years[years.length - 1];
+      const sliderA = document.getElementById('slider-a');
+      const sliderB = document.getElementById('slider-b');
+      const badgeA  = document.getElementById('badge-a');
+      const badgeB  = document.getElementById('badge-b');
+      const fill    = document.getElementById('track-fill');
+      const legendA = document.getElementById('legend-a');
+      const legendB = document.getElementById('legend-b');
+
+      // Init sliders
+      [sliderA, sliderB].forEach(s => {
+        s.min   = minY;
+        s.max   = maxY;
+        s.step  = 1;
+      });
+      sliderA.value = minY;
+      sliderB.value = maxY;
+
+      function getYearData(year) {
+        return d.trend.find(t => t.year === parseInt(year)) || {};
+      }
+
+      function updateFill() {
+        const a   = parseInt(sliderA.value);
+        const b   = parseInt(sliderB.value);
+        const lo  = Math.min(a, b);
+        const hi  = Math.max(a, b);
+        const pct = (yr) => ((yr - minY) / (maxY - minY)) * 100;
+        fill.style.left  = pct(lo) + '%';
+        fill.style.width = (pct(hi) - pct(lo)) + '%';
+      }
+
+      function pctChange(a, b) {
+        if (!a || a === 0) return null;
+        return Math.round(((b - a) / a) * 100);
+      }
+
+      function renderCompareSVG(yearA, yearB) {
+        const svg = document.getElementById('compare-svg');
+        if (!svg) return;
+        const W = 800, H = 140, PAD = { top: 10, right: 20, bottom: 30, left: 10 };
+        const allVals = d.trend.map(t => t.refugees || 0);
+        const maxV = Math.max(...allVals) * 1.1 || 1;
+        const xs = d.trend.map((_, i) => PAD.left + i * (W - PAD.left - PAD.right) / (d.trend.length - 1));
+        const y  = v => PAD.top + (1 - v / maxV) * (H - PAD.top - PAD.bottom);
+        const pts = d.trend.map((t, i) => `${xs[i]},${y(t.refugees || 0)}`).join(' ');
+
+        const idxA = d.trend.findIndex(t => t.year === yearA);
+        const idxB = d.trend.findIndex(t => t.year === yearB);
+
+        svg.innerHTML = `
+          <polyline points="${pts}" fill="none" stroke="#2a2a2a" stroke-width="1.5" stroke-dasharray="4,3"/>
+          ${idxA >= 0 ? `
+            <circle cx="${xs[idxA]}" cy="${y(d.trend[idxA].refugees||0)}" r="6" fill="#2dd4bf" opacity="0.9"/>
+            <line x1="${xs[idxA]}" y1="${PAD.top}" x2="${xs[idxA]}" y2="${H-PAD.bottom}" stroke="#2dd4bf" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+            <text x="${xs[idxA]}" y="${H-PAD.bottom+16}" font-family="monospace" font-size="10" fill="#2dd4bf" text-anchor="middle">${yearA}</text>
+          ` : ''}
+          ${idxB >= 0 ? `
+            <circle cx="${xs[idxB]}" cy="${y(d.trend[idxB].refugees||0)}" r="6" fill="#5b8dd9" opacity="0.9"/>
+            <line x1="${xs[idxB]}" y1="${PAD.top}" x2="${xs[idxB]}" y2="${H-PAD.bottom}" stroke="#5b8dd9" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+            <text x="${xs[idxB]}" y="${H-PAD.bottom+16}" font-family="monospace" font-size="10" fill="#5b8dd9" text-anchor="middle">${yearB}</text>
+          ` : ''}
+          ${d.trend.map((t, i) => i !== idxA && i !== idxB ? `
+            <text x="${xs[i]}" y="${H-PAD.bottom+16}" font-family="monospace" font-size="9" fill="#2a2a2a" text-anchor="middle">${t.year}</text>
+          ` : '').join('')}
+        `;
+      }
+
+      function renderCompare() {
+        const yearA = parseInt(sliderA.value);
+        const yearB = parseInt(sliderB.value);
+        const dA    = getYearData(yearA);
+        const dB    = getYearData(yearB);
+
+        badgeA.textContent  = yearA;
+        badgeB.textContent  = yearB;
+        legendA.textContent = yearA;
+        legendB.textContent = yearB;
+        updateFill();
+        renderCompareSVG(yearA, yearB);
+
+        const metrics = [
+          { label: 'Refugees',           key: 'refugees' },
+          { label: 'Asylum Seekers',     key: 'asylum_seekers' },
+          { label: 'Internally Displaced', key: 'idps' },
+          { label: 'Total',              key: 'total' },
+        ].filter(m => (dA[m.key] || 0) + (dB[m.key] || 0) > 0);
+
+        const maxVal = Math.max(...metrics.map(m => Math.max(dA[m.key]||0, dB[m.key]||0)));
+
+        const chg = pctChange(dA.total || dA.refugees, dB.total || dB.refugees);
+        const chgClass = chg === null ? 'flat' : chg > 0 ? 'up' : chg < 0 ? 'down' : 'flat';
+        const chgLabel = chg === null ? '—' : (chg > 0 ? '+' : '') + chg + '%';
+
+        document.getElementById('compare-grid').innerHTML = `
+          <div class="compare-col">
+            ${metrics.map(m => `
+              <div class="c-stat">
+                <div class="c-stat-label">${m.label}</div>
+                <div class="c-stat-number">${fmt(dA[m.key] || 0)}</div>
+                <div class="c-stat-track">
+                  <div class="c-stat-bar" style="width:${maxVal ? ((dA[m.key]||0)/maxVal*100).toFixed(1) : 0}%"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="compare-arrow">
+            <div class="change-pct ${chgClass}">${chgLabel}</div>
+            <div class="change-label">change</div>
+          </div>
+          <div class="compare-col b">
+            ${metrics.map(m => `
+              <div class="c-stat">
+                <div class="c-stat-label">${m.label}</div>
+                <div class="c-stat-number">${fmt(dB[m.key] || 0)}</div>
+                <div class="c-stat-track">
+                  <div class="c-stat-bar" style="width:${maxVal ? ((dB[m.key]||0)/maxVal*100).toFixed(1) : 0}%"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      sliderA.addEventListener('input', renderCompare);
+      sliderB.addEventListener('input', renderCompare);
+      renderCompare();
+    }
+
+    // Render news feed
+    const newsList = document.getElementById('news-list');
+    if (newsList && d.news && d.news.length > 0) {
+      newsList.innerHTML = d.news.map(article => `
+        <div class="news-item">
+          <div>
+            <a class="news-title" href="${article.url}" target="_blank">${article.title}</a>
+            <div class="news-meta">${article.source}</div>
+          </div>
+          <div class="news-date">${article.date}</div>
+        </div>
+      `).join('');
+    }
 
     document.getElementById('footer-date').textContent = 'Last updated: ' + data.last_updated;
 
